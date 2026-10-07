@@ -1,0 +1,39 @@
+name: Extract AutoContent Engine
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Extrair projeto
+        run: |
+          ZIP=$(find . -maxdepth 1 -type f -name "*.zip" | head -1)
+          mkdir -p /tmp/project
+          unzip -q "$ZIP" -d /tmp/project
+
+          FIRST=$(find /tmp/project -mindepth 1 -maxdepth 1 -type d | head -1)
+
+          if [ -n "$FIRST" ]; then
+            cp -a "$FIRST"/. .
+          else
+            cp -a /tmp/project/. .
+          fi
+
+          rm -f ./*.zip
+
+      - name: Salvar arquivos extraídos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Extrair AutoContent Engine" || exit 0
+          git push
